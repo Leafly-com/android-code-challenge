@@ -12,22 +12,28 @@ class StoreTest {
             val store = Store()
 
             val states = mutableListOf<String>()
-            store.registerListener { state ->
-                states += state
-            }
+            store.registerListener(object: StateListener<String> {
+                override fun onStateChanged(state: String) {
+                    states += state
+                }
+            })
 
             awaitAll(
                 async(Dispatchers.IO) {
-                    store.updateState { state ->
-                        Thread.sleep(Random.nextLong(0, 100))
-                        state + "Hello"
-                    }
+                    store.updateState(object: Action<String> {
+                        override fun run(previousState: String): String {
+                            Thread.sleep(Random.nextLong(0, 100))
+                            return previousState + "Hello"
+                        }
+                    })
                 },
                 async(Dispatchers.IO) {
-                    store.updateState { state ->
-                        Thread.sleep(Random.nextLong(0, 100))
-                        state + "World"
-                    }
+                    store.updateState(object: Action<String> {
+                        override fun run(previousState: String): String {
+                            Thread.sleep(Random.nextLong(0, 100))
+                            return previousState + "World"
+                        }
+                    })
                 }
             )
 
